@@ -7,8 +7,8 @@ const char* ssid = "WIFI_NAME";
 const char* password = "WIFI_PASSWORD";
 
 // DHT setup
-#define DHTPIN 4
-#define soilPin 34    // Connect DHT11 DATA pin to GPIO 4
+#define DHTPIN 4 
+#define soilPin 34         // Connect DHT11 DATA pin to GPIO 4
 #define DHTTYPE DHT11
 DHT dht(DHTPIN, DHTTYPE);
 
@@ -55,7 +55,11 @@ void loop() {
     // Read sensor
     float temperature = dht.readTemperature();  // Celsius
     float humidity = dht.readHumidity();
-    int soil =  analogRead(soilPin);
+    int dry = 4095;
+    int wet = 1900;
+    int soilRaw =  analogRead(soilPin);
+    int soil = map(soilRaw, dry, wet, 0, 100);
+    soil = constrain(soil, 0, 100);
 
     // Check if reading failed
     if (isnan(temperature) || isnan(humidity)) {
@@ -68,7 +72,9 @@ void loop() {
     Serial.print(temperature);
     Serial.print(" °C | Humidity: ");
     Serial.print(humidity);
-    Serial.print(" | Soil: ");
+    Serial.print(" | SoilRaw: ");
+    Serial.print(soilRaw);
+    Serial.print(" | Soil %:");
     Serial.print(soil);
     Serial.println(" %");
 
@@ -95,5 +101,6 @@ void loop() {
     }
 
     http.end();
+
   }
 }
