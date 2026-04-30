@@ -1,12 +1,18 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include <DHT.h>
 
+// WiFi credentials
 const char* ssid = "WIFI_NAME";
 const char* password = "WIFI_PASSWORD";
 
-int led = 5;
-int count = 0;
+// DHT setup
+#define DHTPIN 4
+#define soilPin 34    // Connect DHT11 DATA pin to GPIO 4
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
 
+// Timer
 unsigned long lastSend = 0;
 
 void connectWiFi() {
@@ -27,11 +33,12 @@ void connectWiFi() {
 
 void setup() {
   Serial.begin(115200);
-  pinMode(led, OUTPUT);
+
+  dht.begin();   // Initialize DHT sensor
 
   connectWiFi();
 }
-  
+
 void loop() {
 
   // Reconnect WiFi if needed
@@ -45,14 +52,36 @@ void loop() {
 
     lastSend = millis();
 
-    HTTPClient http;
+    // Read sensor
+    float temperature = dht.readTemperature();  // Celsius
+    float humidity = dht.readHumidity();
+    int soil =  analogRead(soilPin);
 
-    http.begin("http://<SERVER_IP>/data");
-    http.addHeader("Content-Type", "application/json");
-
-    String jsonData = "{\"count\": " + String(count++) + "}";
+    // Check if reading failed
+    if (isnan(temperature) || isnan(humidity)) {
+      Serial.println("Failed to read from DHT sensor!");
+      return;
+    }
 
     Serial.println("Sending data...");
+    Serial.print("Temp: ");
+    Serial.print(temperature);
+    Serial.print(" °C | Humidity: ");
+    Serial.print(humidity);
+    Serial.print(" | Soil: ");
+    Serial.print(soil);
+    Serial.println(" %");
+
+    HTTPClient http;
+    http.begin("http://10.148.200.92:5000/api/esp32/reading");
+    http.addHeader("Content-Type", "application/json");
+
+    // JSON payload
+    String jsonData = "{";
+    jsonData += "\"temperature\": " + String(temperature) + ",";
+    jsonData += "\"humidity\": " + String(humidity) + ",";
+    jsonData += "\"soil\": " + String(soil);
+    jsonData += "}";
 
     int httpResponseCode = http.POST(jsonData);
 
@@ -66,10 +95,5 @@ void loop() {
     }
 
     http.end();
-
-    // Optional LED blink
-    digitalWrite(led, HIGH);
-    delay(100);
-    digitalWrite(led, LOW);
   }
 }

@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Irrigation Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <div>
+          <h1>Smart Irrigation Dashboard</h1>
+          <p class="sub">
+            Two modes: <b>ESP32 live</b> (sensor pushes data) and <b>manual input</b> (try values).
+          </p>
+        </div>
+        <div class="pill" id="healthPill">Checking…</div>
+      </header>
+
+      <nav class="tabs">
+        <button class="tab active" data-tab="esp32">ESP32 live</button>
+        <button class="tab" data-tab="manual">Manual input</button>
+      </nav>
+
+      <main>
+        <section class="panel active" id="tab-esp32">
+          <div class="card">
+            <h2>Latest ESP32 reading</h2>
+            <p class="muted">
+              This updates automatically (polling <code>/api/esp32/latest</code>).
+            </p>
+
+            <div class="grid">
+              <div class="kv">
+                <div class="k">Soil Moisture</div>
+                <div class="v" id="esp32Soil">—</div>
+              </div>
+              <div class="kv">
+                <div class="k">Received</div>
+                <div class="v" id="esp32Received">—</div>
+              </div>
+              <div class="kv">
+                <div class="k">Temperature (°C)</div>
+                <div class="v" id="esp32Temp">—</div>
+              </div>
+              <div class="kv">
+                <div class="k">Humidity (%)</div>
+                <div class="v" id="esp32Hum">—</div>
+              </div>
+              <div class="kv">
+                <div class="k">Probability</div>
+                <div class="v" id="esp32Prob">—</div>
+              </div>
+              <div class="kv">
+                <div class="k">Decision</div>
+                <div class="v" id="esp32Decision">—</div>
+              </div>
+            </div>
+            <br>
+            <button onclick="manualFetch()">Latest Update</button>
+
+            <canvas id="esp32Chart" height="120"></canvas>
+
+            <details class="details">
+              <summary>ESP32 POST format</summary>
+              <pre class="code">POST /api/esp32/reading
+Content-Type: application/json
+
+{
+  "temperature": 31.2,
+  "humidity": 48.7,
+  "device_id": "esp32-1"
+}</pre>
+            </details>
+          </div>
+        </section>
+
+        <section class="panel" id="tab-manual">
+          <div class="card">
+            <h2>Manual input</h2>
+            <p class="muted">Enter temperature and humidity and soil moisture to see the prediction.</p>
+
+            <form id="manualForm" class="form">
+              <label>
+                Temperature (°C)
+                <input name="temperature" type="number" step="0.1" value="30" required />
+              </label>
+              <label>
+                Humidity (%)
+                <input name="humidity" type="number" step="0.1" value="50" required />
+              </label>
+              <label>
+                Soil Moisture (%)
+                <input name="soil" type="number" step="0.1" value="40" required />
+              </label>
+              <button type="submit">Predict</button>
+            </form>
+
+            <div class="result" id="manualResult">
+              <div class="muted">Submit to see results…</div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <span>API: <code>/api/predict</code>, <code>/api/esp32/reading</code>, <code>/api/esp32/latest</code></span>
+      </footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

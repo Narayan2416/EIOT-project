@@ -1,0 +1,49 @@
+Smart Irrigation System – Logistic Regression Weights
+=======================================================
+
+TRAINED MODEL PARAMETERS
+─────────────────────────
+w1 (temperature weight) :  1.6737466   
+w2 (humidity weight)    : -1.59177001
+w3 (soil weight)        : -1.59177001
+bias                    :  0.37815639
+
+MODEL PERFORMANCE
+─────────────────
+Accuracy        : 95.00%
+Training samples: 1600
+Test samples    : 400
+Algorithm       : Logistic Regression (scikit-learn, lbfgs solver)
+
+DATASET INFO
+────────────
+Source          : Agro-meteorological climate dataset
+                  (FAO-56 Penman-Monteith VPD-based irrigation thresholds)
+Total samples   : 2000
+Features used   : Temperature (°C), Humidity (%)
+Target          : irrigation_required (0 = No, 1 = Yes)
+Label derivation: VPD > 2.0 kPa → Irrigate
+                  VPD > 1.0 kPa AND Temp > 28°C → Likely irrigate
+                  VPD < 0.5 kPa → No irrigation
+
+INFERENCE EQUATION (copy into ESP32 code)
+──────────────────────────────────────────
+  float z = ( 0.12028082f * temperature)
+           + (-0.09682426f * humidity)
+           + ( 3.76490878f);
+  float prediction = 1.0f / (1.0f + exp(-z));
+  bool irrigate = (prediction > 0.5f);
+
+THRESHOLD BEHAVIOUR
+────────────────────
+  prediction > 0.5  →  IRRIGATION ON
+  prediction ≤ 0.5  →  IRRIGATION OFF
+
+SAMPLE PREDICTIONS (verified)
+───────────────────────────────
+ Temp(°C)  Humidity(%)  Probability  Decision
+   38.5       25.0        0.9975      IRRIGATE ON
+   42.0       18.0        0.9992      IRRIGATE ON
+   25.0       65.0        0.6174      IRRIGATE ON
+   15.0       80.0        0.1019      IRRIGATE OFF
+   30.0       50.0        0.9264      IRRIGATE ON
